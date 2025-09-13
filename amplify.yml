@@ -3,19 +3,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Current directory:"
-        - pwd
-        - echo "Directory contents:"
-        - ls -la
-        - echo "Moving to frontend directory..."
         - cd frontend
-        - echo "Frontend directory contents:"
-        - ls -la
-        - echo "Installing dependencies..."
         - npm ci
     build:
       commands:
-        - echo "Building application..."
         - cd frontend
         - npm run build
   artifacts:

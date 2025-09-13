@@ -171,3 +171,4 @@ Error: export const dynamic = "force-static"/export const revalidate not configu
 ## 作成者
 
 AI Assistant (Claude Sonnet 4)
+

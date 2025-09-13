@@ -1,0 +1,10 @@
+[33m660cbaf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Revert amplify.yml: remove debug commands that caused build failure
+[33mbbbe8f8[m Fix amplify.yml: add debug commands and ensure cd frontend works
+[33md117739[m Fix Amplify deployment: add package-lock.json and simplify Next.js config
+[33m006162f[m Fix: Use standalone output for Amplify SSR deployment
+[33m57845ff[m Fix Amplify SSR configuration and add test homepage
+[33m3e13eba[m Revert to SSR: Remove static export and fix amplify.yml
+[33m527b8b7[m Configure Next.js for static export and update amplify.yml
+[33me008030[m Fix ESLint error: Replace a tags with Link components
+[33mab4ad6a[m Fix TypeScript build error in api.ts
+[33m0321e1b[m Add amplify.yml build configuration

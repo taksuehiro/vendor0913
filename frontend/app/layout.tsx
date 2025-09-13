@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,18 +40,18 @@ export default function RootLayout({
                     </h1>
                   </div>
                   <nav className="flex items-center space-x-4">
-                    <a
+                    <Link
                       href="/"
                       className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
                     >
                       ホーム
-                    </a>
-                    <a
+                    </Link>
+                    <Link
                       href="/login"
                       className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
                     >
                       ログイン
-                    </a>
+                    </Link>
                   </nav>
                 </div>
               </div>

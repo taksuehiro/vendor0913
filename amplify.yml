@@ -8,10 +8,12 @@ frontend:
     build:
       commands:
         - npm run build
+        - npm run start &
   artifacts:
-    baseDirectory: frontend/.next
+    baseDirectory: frontend
     files:
       - '**/*'
+    name: myAmplifyApp
   cache:
     paths:
       - frontend/node_modules/**/*

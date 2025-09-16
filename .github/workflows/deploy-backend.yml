@@ -1,0 +1,96 @@
+name: Deploy Backend to ECS
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'backend/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'backend/**' ]
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: vendor0913-api
+  ECS_SERVICE: vendor0913-api-service
+  ECS_CLUSTER: vendor0913-cluster
+  ECS_TASK_DEFINITION: vendor0913-api-task-secrets
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+      
+    - name: Build, tag, and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        # Build a docker container and push it to ECR
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./backend
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+        
+    - name: Download task definition
+      run: |
+        aws ecs describe-task-definition \
+          --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+          
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: vendor0913-api
+        image: ${{ steps.build-image.outputs.image }}
+        
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+        
+    - name: Run CodeDeploy Blue/Green deployment
+      run: |
+        # CodeDeployアプリケーションとデプロイメントグループを取得
+        DEPLOYMENT_GROUP=$(aws deploy list-deployment-groups \
+          --application-name vendor0913-api-app \
+          --query 'deploymentGroups[0]' \
+          --output text)
+          
+        if [ "$DEPLOYMENT_GROUP" != "None" ] && [ "$DEPLOYMENT_GROUP" != "" ]; then
+          # Blue/Greenデプロイメントを実行
+          aws deploy create-deployment \
+            --application-name vendor0913-api-app \
+            --deployment-group-name $DEPLOYMENT_GROUP \
+            --deployment-config-name CodeDeployDefault.ECSAllAtOnce \
+            --description "Blue/Green deployment via GitHub Actions"
+        else
+          echo "CodeDeploy deployment group not found, skipping Blue/Green deployment"
+        fi
+        
+    - name: Get service URL
+      run: |
+        ALB_DNS=$(aws elbv2 describe-load-balancers \
+          --names vendor0913-alb \
+          --query 'LoadBalancers[0].DNSName' \
+          --output text)
+        echo "Backend deployed to: https://$ALB_DNS"
+        echo "::set-output name=service-url::https://$ALB_DNS"

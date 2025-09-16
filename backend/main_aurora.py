@@ -1,9 +1,14 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from pydantic import BaseModel
 import logging
 import json
+import boto3
+import os
+from datetime import datetime
+from openai import OpenAI
+from typing import List
 
 # Aurora Data API接続
 from aurora_database import get_db, execute_sql
@@ -12,10 +17,41 @@ from schemas import UserCreate, UserResponse, VendorCreate, VendorResponse
 from auth import get_password_hash, verify_password, create_access_token
 from datetime import timedelta
 
+# S3設定
+S3_BUCKET_NAME = "vendor0913-documents"
+S3_REGION = "ap-northeast-1"
+s3_client = boto3.client('s3', region_name=S3_REGION)
+
+# OpenAI設定
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+openai_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AIベンダー調査API", version="1.0.0")
+
+# 埋め込み機能
+def create_embedding(text: str) -> List[float]:
+    """テキストをベクトル化"""
+    if not openai_client:
+        raise HTTPException(
+            status_code=500,
+            detail="OpenAI API key not configured"
+        )
+    
+    try:
+        response = openai_client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        logger.error(f"Embedding creation error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"埋め込み作成エラー: {str(e)}"
+        )
 
 # CORS設定
 app.add_middleware(
@@ -215,6 +251,156 @@ async def search_vendors(search_request: SearchRequest, db = Depends(get_db)):
         raise HTTPException(
             status_code=500,
             detail="検索処理でエラーが発生しました"
+        )
+
+# ドキュメントアップロード
+@app.post("/upload")
+async def upload_document(file: UploadFile = File(...)):
+    """ドキュメントをS3にアップロード"""
+    try:
+        # ファイル名の生成（タイムスタンプ付き）
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_extension = file.filename.split('.')[-1] if '.' in file.filename else 'txt'
+        s3_key = f"vendor0913-folder/{timestamp}_{file.filename}"
+        
+        # ファイルをS3にアップロード
+        file_content = await file.read()
+        s3_client.put_object(
+            Bucket=S3_BUCKET_NAME,
+            Key=s3_key,
+            Body=file_content,
+            ContentType=file.content_type or 'application/octet-stream'
+        )
+        
+        logger.info(f"File uploaded to S3: {s3_key}")
+        
+        return {
+            "message": "ファイルが正常にアップロードされました",
+            "s3_key": s3_key,
+            "filename": file.filename,
+            "size": len(file_content)
+        }
+        
+    except Exception as e:
+        logger.error(f"Upload error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"ファイルアップロードエラー: {str(e)}"
+        )
+
+# ドキュメント処理・埋め込み・保存
+@app.post("/ingest")
+async def ingest_document(s3_key: str):
+    """S3のドキュメントを処理してAuroraに保存"""
+    try:
+        # S3からファイルを取得
+        response = s3_client.get_object(Bucket=S3_BUCKET_NAME, Key=s3_key)
+        file_content = response['Body'].read()
+        
+        # ファイルタイプに応じて処理
+        if s3_key.endswith('.pdf'):
+            # PDF処理（将来実装）
+            content = f"PDF content from {s3_key}"
+        elif s3_key.endswith('.txt'):
+            content = file_content.decode('utf-8')
+        else:
+            content = file_content.decode('utf-8', errors='ignore')
+        
+        # ドキュメントを分割（簡易版）
+        chunks = [content[i:i+1000] for i in range(0, len(content), 1000)]
+        
+        # 各チャンクをデータベースに保存
+        for i, chunk in enumerate(chunks):
+            metadata = {
+                "s3_key": s3_key,
+                "chunk_index": i,
+                "total_chunks": len(chunks),
+                "uploaded_at": datetime.now().isoformat()
+            }
+            
+            # 埋め込みベクトルを作成
+            try:
+                embedding = create_embedding(chunk)
+                embedding_str = json.dumps(embedding)
+            except Exception as e:
+                logger.warning(f"Embedding creation failed for chunk {i}: {e}")
+                embedding_str = None
+            
+            execute_sql(
+                "INSERT INTO documents (content, embedding, metadata) VALUES (%s, %s, %s)",
+                [
+                    {"name": "content", "value": {"stringValue": chunk}},
+                    {"name": "embedding", "value": {"stringValue": embedding_str}} if embedding_str else {"name": "embedding", "value": {"isNull": True}},
+                    {"name": "metadata", "value": {"stringValue": json.dumps(metadata)}}
+                ]
+            )
+        
+        logger.info(f"Document ingested: {s3_key}, {len(chunks)} chunks")
+        
+        return {
+            "message": "ドキュメントが正常に処理されました",
+            "s3_key": s3_key,
+            "chunks_created": len(chunks)
+        }
+        
+    except Exception as e:
+        logger.error(f"Ingest error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"ドキュメント処理エラー: {str(e)}"
+        )
+
+# RAG検索機能
+@app.post("/search/documents")
+async def search_documents(query: str, limit: int = 5):
+    """ベクトル検索でドキュメントを検索"""
+    try:
+        # クエリをベクトル化
+        query_embedding = create_embedding(query)
+        query_embedding_str = json.dumps(query_embedding)
+        
+        # ベクトル検索を実行
+        result = execute_sql(
+            """
+            SELECT content, metadata, 
+                   (embedding <=> %s::vector) as distance
+            FROM documents 
+            WHERE embedding IS NOT NULL
+            ORDER BY embedding <=> %s::vector
+            LIMIT %s
+            """,
+            [
+                {"name": "query_embedding1", "value": {"stringValue": query_embedding_str}},
+                {"name": "query_embedding2", "value": {"stringValue": query_embedding_str}},
+                {"name": "limit", "value": {"longValue": limit}}
+            ]
+        )
+        
+        # 結果を整形
+        documents = []
+        if result.get('records'):
+            for record in result['records']:
+                content = record[0]['stringValue']
+                metadata = json.loads(record[1]['stringValue'])
+                distance = float(record[2]['doubleValue'])
+                
+                documents.append({
+                    "content": content,
+                    "metadata": metadata,
+                    "similarity_score": 1 - distance  # 距離を類似度に変換
+                })
+        
+        return {
+            "query": query,
+            "documents": documents,
+            "total_found": len(documents)
+        }
+        
+    except Exception as e:
+        logger.error(f"Document search error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"ドキュメント検索エラー: {str(e)}"
         )
 
 if __name__ == "__main__":

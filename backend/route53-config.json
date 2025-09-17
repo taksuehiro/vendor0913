@@ -1,0 +1,56 @@
+{
+  "hostedZone": {
+    "Name": "vendor0913.com",
+    "Comment": "Hosted zone for vendor0913 application",
+    "VPC": {
+      "VPCRegion": "ap-northeast-1",
+      "VPCId": "vpc-12345678"
+    },
+    "Tags": [
+      {
+        "Key": "Project",
+        "Value": "tak-vendor2-0912"
+      },
+      {
+        "Key": "Owner",
+        "Value": "takuya_suehiro"
+      },
+      {
+        "Key": "Environment",
+        "Value": "production"
+      }
+    ]
+  },
+  "records": [
+    {
+      "Name": "vendor0913.com",
+      "Type": "A",
+      "AliasTarget": {
+        "DNSName": "vendor0913-alb-1829210726.ap-northeast-1.elb.amazonaws.com",
+        "HostedZoneId": "Z14GRHDCWA56QT",
+        "EvaluateTargetHealth": true
+      }
+    },
+    {
+      "Name": "www.vendor0913.com",
+      "Type": "CNAME",
+      "TTL": 300,
+      "ResourceRecords": ["vendor0913.com"]
+    },
+    {
+      "Name": "api.vendor0913.com",
+      "Type": "A",
+      "AliasTarget": {
+        "DNSName": "vendor0913-alb-1829210726.ap-northeast-1.elb.amazonaws.com",
+        "HostedZoneId": "Z14GRHDCWA56QT",
+        "EvaluateTargetHealth": true
+      }
+    },
+    {
+      "Name": "app.vendor0913.com",
+      "Type": "CNAME",
+      "TTL": 300,
+      "ResourceRecords": ["d1234567890.amplifyapp.com"]
+    }
+  ]
+}

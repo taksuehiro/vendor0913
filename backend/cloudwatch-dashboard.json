@@ -1,0 +1,146 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ApplicationELB", "RequestCount", "LoadBalancer", "vendor0913-alb-1829210726" ],
+          [ ".", "HTTPCode_Target_2XX_Count", ".", "." ],
+          [ ".", "HTTPCode_Target_4XX_Count", ".", "." ],
+          [ ".", "HTTPCode_Target_5XX_Count", ".", "." ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "ap-northeast-1",
+        "title": "ALB Request Count and HTTP Status Codes",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "vendor0913-alb-1829210726" ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "ap-northeast-1",
+        "title": "ALB Target Response Time",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ECS", "CPUUtilization", "ServiceName", "vendor0913-api-service", "ClusterName", "vendor0913-cluster" ],
+          [ ".", "MemoryUtilization", ".", ".", ".", "." ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "ap-northeast-1",
+        "title": "ECS Service CPU and Memory Utilization",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ApplicationELB", "HealthyHostCount", "TargetGroup", "vendor0913-api-tg-http", "LoadBalancer", "vendor0913-alb-1829210726" ],
+          [ ".", "UnHealthyHostCount", ".", ".", ".", "." ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "ap-northeast-1",
+        "title": "ALB Target Group Health",
+        "period": 300,
+        "stat": "Average"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/WAFV2", "BlockedRequests", "WebACL", "vendor0913-waf-web-acl", "Region", "ap-northeast-1" ],
+          [ ".", "AllowedRequests", ".", ".", ".", "." ],
+          [ ".", "CountedRequests", ".", ".", ".", "." ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "ap-northeast-1",
+        "title": "WAF Request Statistics",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/Logs", "IncomingLogEvents", "LogGroupName", "/ecs/vendor0913/api" ],
+          [ ".", "IncomingBytes", ".", "." ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "ap-northeast-1",
+        "title": "CloudWatch Logs Incoming Data",
+        "period": 300,
+        "stat": "Sum"
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 18,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "query": "SOURCE '/ecs/vendor0913/api' | fields @timestamp, @message\n| filter @message like /ERROR/\n| sort @timestamp desc\n| limit 20",
+        "region": "ap-northeast-1",
+        "title": "Recent Error Logs",
+        "view": "table"
+      }
+    },
+    {
+      "type": "log",
+      "x": 0,
+      "y": 24,
+      "width": 24,
+      "height": 6,
+      "properties": {
+        "query": "SOURCE '/ecs/vendor0913/api' | fields @timestamp, @message\n| filter @message like /Request:/\n| sort @timestamp desc\n| limit 20",
+        "region": "ap-northeast-1",
+        "title": "Recent API Requests",
+        "view": "table"
+      }
+    }
+  ]
+}

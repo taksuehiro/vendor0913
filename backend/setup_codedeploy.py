@@ -11,6 +11,7 @@ import time
 def create_codedeploy_service_role():
     """CodeDeployサービスロールを作成"""
     iam_client = boto3.client('iam', region_name='ap-northeast-1')
+    sts_client = boto3.client('sts', region_name='ap-northeast-1')
     
     try:
         # 信頼ポリシー
@@ -48,11 +49,13 @@ def create_codedeploy_service_role():
             )
         
         print(f"✅ CodeDeploy Service Role created: CodeDeployServiceRole")
-        return f"arn:aws:iam::{iam_client.get_caller_identity()['Account']}:role/CodeDeployServiceRole"
+        account_id = sts_client.get_caller_identity()['Account']
+        return f"arn:aws:iam::{account_id}:role/CodeDeployServiceRole"
         
     except iam_client.exceptions.EntityAlreadyExistsException:
         print(f"✅ CodeDeploy Service Role already exists: CodeDeployServiceRole")
-        return f"arn:aws:iam::{iam_client.get_caller_identity()['Account']}:role/CodeDeployServiceRole"
+        account_id = sts_client.get_caller_identity()['Account']
+        return f"arn:aws:iam::{account_id}:role/CodeDeployServiceRole"
     except Exception as e:
         print(f"❌ Error creating CodeDeploy Service Role: {e}")
         return None

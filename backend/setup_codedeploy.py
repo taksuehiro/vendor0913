@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-CodeDeploy設定スクリプト
-AWSコンソールで実行するためのスクリプト
-"""
-
 import boto3
 import json
 import time
@@ -32,14 +26,13 @@ def create_codedeploy_service_role():
         response = iam_client.create_role(
             RoleName='CodeDeployServiceRole',
             AssumeRolePolicyDocument=json.dumps(trust_policy),
-            Description='CodeDeploy service role for vendor0913 project'
+            Description='CodeDeploy service role for ECS Blue/Green deployment'
         )
         
-        # 必要なポリシーをアタッチ
+        # ECS用の必要なポリシーをアタッチ
         policies = [
-            'arn:aws:iam::aws:policy/service-role/CodeDeployRole',
-            'arn:aws:iam::aws:policy/AmazonECS_FullAccess',
-            'arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly'
+            'arn:aws:iam::aws:policy/AWSCodeDeployRoleForECS',  # ECS専用ポリシー
+            'arn:aws:iam::aws:policy/AmazonECS_FullAccess'
         ]
         
         for policy_arn in policies:
@@ -81,7 +74,7 @@ def create_codedeploy_application():
         return False
 
 def create_codedeploy_deployment_group(service_role_arn):
-    """CodeDeployデプロイグループを作成"""
+    """CodeDeployデプロイグループを作成（ECS Blue/Green用）"""
     codedeploy_client = boto3.client('codedeploy', region_name='ap-northeast-1')
     
     try:
@@ -89,7 +82,7 @@ def create_codedeploy_deployment_group(service_role_arn):
             applicationName='vendor0913-api-app',
             deploymentGroupName='vendor0913-api-group',
             serviceRoleArn=service_role_arn,
-            deploymentConfigName='CodeDeployDefault.ECSBlueGreen',
+            deploymentConfigName='CodeDeployDefault.ECSLinear10PercentEvery1Minutes',  # ECS用の設定
             ecsServices=[
                 {
                     'serviceName': 'vendor0913-api-service',
@@ -103,17 +96,21 @@ def create_codedeploy_deployment_group(service_role_arn):
                     }
                 ]
             },
+            # ECS用のBlue/Green設定
             blueGreenDeploymentConfiguration={
                 'deploymentReadyOption': {
-                    'actionOnTimeout': 'CONTINUE_DEPLOYMENT'
-                },
-                'greenFleetProvisioningOption': {
-                    'action': 'COPY_AUTO_SCALING_GROUP'
+                    'actionOnTimeout': 'CONTINUE_DEPLOYMENT',
+                    'waitTimeInMinutes': 0
                 },
                 'terminateBlueInstancesOnDeploymentSuccess': {
                     'action': 'TERMINATE',
                     'terminationWaitTimeInMinutes': 5
                 }
+            },
+            # 自動ロールバック設定
+            autoRollbackConfiguration={
+                'enabled': True,
+                'events': ['DEPLOYMENT_FAILURE', 'DEPLOYMENT_STOP_ON_ALARM']
             }
         )
         
@@ -122,7 +119,117 @@ def create_codedeploy_deployment_group(service_role_arn):
         
     except Exception as e:
         print(f"❌ Error creating CodeDeploy Deployment Group: {e}")
+        print(f"   詳細: {str(e)}")
         return False
+
+def create_alternative_deployment_group(service_role_arn):
+    """代替設定でデプロイグループを作成"""
+    codedeploy_client = boto3.client('codedeploy', region_name='ap-northeast-1')
+    
+    print("📋 代替設定でデプロイグループを作成中...")
+    
+    try:
+        response = codedeploy_client.create_deployment_group(
+            applicationName='vendor0913-api-app',
+            deploymentGroupName='vendor0913-api-group-v2',
+            serviceRoleArn=service_role_arn,
+            deploymentConfigName='CodeDeployDefault.ECSAllAtOnceBlueGreen',  # 一括切り替え
+            ecsServices=[
+                {
+                    'serviceName': 'vendor0913-api-service',
+                    'clusterName': 'vendor0913-cluster'
+                }
+            ],
+            loadBalancerInfo={
+                'targetGroupInfoList': [
+                    {
+                        'name': 'vendor0913-api-tg'
+                    }
+                ]
+            },
+            # 最小限のBlue/Green設定
+            blueGreenDeploymentConfiguration={
+                'deploymentReadyOption': {
+                    'actionOnTimeout': 'CONTINUE_DEPLOYMENT'
+                },
+                'terminateBlueInstancesOnDeploymentSuccess': {
+                    'action': 'TERMINATE',
+                    'terminationWaitTimeInMinutes': 5
+                }
+            }
+        )
+        
+        print(f"✅ 代替 CodeDeploy Deployment Group created: vendor0913-api-group-v2")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error creating alternative Deployment Group: {e}")
+        return False
+
+def validate_prerequisites():
+    """事前要件を検証"""
+    print("🔍 事前要件を検証中...")
+    
+    ecs_client = boto3.client('ecs', region_name='ap-northeast-1')
+    elbv2_client = boto3.client('elbv2', region_name='ap-northeast-1')
+    
+    try:
+        # ECSクラスターの存在確認
+        clusters_response = ecs_client.describe_clusters(
+            clusters=['vendor0913-cluster']
+        )
+        if not clusters_response['clusters'] or clusters_response['clusters'][0]['status'] != 'ACTIVE':
+            print("❌ ECSクラスター 'vendor0913-cluster' が見つからないか非アクティブです")
+            return False
+        print("✅ ECSクラスター確認完了")
+        
+        # ECSサービスの存在確認
+        services_response = ecs_client.describe_services(
+            cluster='vendor0913-cluster',
+            services=['vendor0913-api-service']
+        )
+        if not services_response['services'] or services_response['services'][0]['status'] != 'ACTIVE':
+            print("❌ ECSサービス 'vendor0913-api-service' が見つからないか非アクティブです")
+            return False
+        print("✅ ECSサービス確認完了")
+        
+        # ターゲットグループの存在確認
+        try:
+            tg_response = elbv2_client.describe_target_groups(
+                Names=['vendor0913-api-tg']
+            )
+            if not tg_response['TargetGroups']:
+                print("❌ ターゲットグループ 'vendor0913-api-tg' が見つかりません")
+                return False
+            print("✅ ターゲットグループ確認完了")
+        except elbv2_client.exceptions.TargetGroupNotFoundException:
+            print("❌ ターゲットグループ 'vendor0913-api-tg' が見つかりません")
+            return False
+        
+        return True
+        
+    except Exception as e:
+        print(f"❌ 事前要件の検証中にエラーが発生: {e}")
+        return False
+
+def list_deployment_configs():
+    """利用可能なECS用デプロイ設定を一覧表示"""
+    codedeploy_client = boto3.client('codedeploy', region_name='ap-northeast-1')
+    
+    try:
+        configs = codedeploy_client.list_deployment_configs()
+        
+        print("\n📋 利用可能なECS用デプロイメント設定:")
+        ecs_configs = [config for config in configs['deploymentConfigsList'] if 'ECS' in config]
+        
+        for config in ecs_configs:
+            print(f"   - {config}")
+        
+        return ecs_configs
+        
+    except Exception as e:
+        print(f"❌ デプロイメント設定の取得中にエラー: {e}")
+        return []
 
 def list_codedeploy_resources():
     """CodeDeployリソースを一覧表示"""
@@ -155,8 +262,17 @@ def list_codedeploy_resources():
 
 def main():
     """メイン実行関数"""
-    print("🚀 Setting up CodeDeploy for Blue/Green deployments...")
-    print("=" * 60)
+    print("🚀 Setting up CodeDeploy for ECS Blue/Green deployments...")
+    print("=" * 70)
+    
+    # 0. 事前要件の検証
+    print("\n0. 事前要件の検証...")
+    if not validate_prerequisites():
+        print("❌ 事前要件が満たされていません。ECS、ALB、ターゲットグループを先に作成してください。")
+        return
+    
+    # 利用可能なデプロイメント設定を表示
+    list_deployment_configs()
     
     # 1. CodeDeployサービスロールを作成
     print("\n1. Creating CodeDeploy Service Role...")
@@ -174,19 +290,28 @@ def main():
     
     # 3. CodeDeployデプロイグループを作成
     print("\n3. Creating CodeDeploy Deployment Group...")
-    if not create_codedeploy_deployment_group(service_role_arn):
-        print("⚠️ Failed to create deployment group, but continuing...")
+    success = create_codedeploy_deployment_group(service_role_arn)
+    
+    if not success:
+        print("\n⚠️ メインのデプロイグループ作成に失敗しました。代替設定を試行します...")
+        create_alternative_deployment_group(service_role_arn)
     
     # 4. リソース一覧表示
     print("\n4. Listing created resources...")
     list_codedeploy_resources()
     
     print("\n✅ CodeDeploy setup completed!")
-    print("\n Next steps:")
-    print("   1. Test Blue/Green deployment")
-    print("   2. Configure deployment hooks")
-    print("   3. Set up monitoring and alerts")
-    print("   4. Create deployment runbook")
+    print("\n�� Next steps:")
+    print("   1. ECSサービスでBlue/Greenデプロイメントを有効化")
+    print("   2. appspec.yamlファイルを作成")
+    print("   3. デプロイメントをテスト実行")
+    print("   4. CloudWatchアラームを設定")
+    print("   5. 自動ロールバックのテスト")
+    
+    print("\n📚 重要なポイント:")
+    print("   - ECSサービスは必ずApplication Load Balancerと関連付けてください")
+    print("   - ターゲットグループは2つ必要です（Blue用とGreen用）")
+    print("   - appspec.yamlでタスク定義とコンテナ設定を指定してください")
 
 if __name__ == "__main__":
     main()

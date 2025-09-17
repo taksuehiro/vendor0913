@@ -96,6 +96,13 @@ def create_codedeploy_deployment_group(service_role_arn):
                     'clusterName': 'vendor0913-cluster'
                 }
             ],
+            loadBalancerInfo={
+                'targetGroupInfoList': [
+                    {
+                        'name': 'vendor0913-api-tg'
+                    }
+                ]
+            },
             blueGreenDeploymentConfiguration={
                 'deploymentReadyOption': {
                     'actionOnTimeout': 'CONTINUE_DEPLOYMENT'
@@ -175,7 +182,7 @@ def main():
     list_codedeploy_resources()
     
     print("\n✅ CodeDeploy setup completed!")
-    print("\n�� Next steps:")
+    print("\n Next steps:")
     print("   1. Test Blue/Green deployment")
     print("   2. Configure deployment hooks")
     print("   3. Set up monitoring and alerts")

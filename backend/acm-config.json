@@ -1,0 +1,38 @@
+{
+  "certificates": [
+    {
+      "DomainName": "vendor0913.com",
+      "SubjectAlternativeNames": [
+        "*.vendor0913.com",
+        "api.vendor0913.com",
+        "app.vendor0913.com"
+      ],
+      "ValidationMethod": "DNS",
+      "Tags": [
+        {
+          "Key": "Project",
+          "Value": "tak-vendor2-0912"
+        },
+        {
+          "Key": "Owner",
+          "Value": "takuya_suehiro"
+        },
+        {
+          "Key": "Environment",
+          "Value": "production"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "method": "DNS",
+    "ttl": 300,
+    "records": [
+      {
+        "name": "_acme-challenge.vendor0913.com",
+        "type": "CNAME",
+        "value": "validation-token"
+      }
+    ]
+  }
+}

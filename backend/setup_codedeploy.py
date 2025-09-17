@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+"""
+CodeDeploy設定スクリプト（ECS Blue/Green対応版）
+AWSコンソールで実行するためのスクリプト
+"""
 import boto3
 import json
 import time
@@ -83,6 +88,11 @@ def create_codedeploy_deployment_group(service_role_arn):
             deploymentGroupName='vendor0913-api-group',
             serviceRoleArn=service_role_arn,
             deploymentConfigName='CodeDeployDefault.ECSLinear10PercentEvery1Minutes',  # ECS用の設定
+            # 重要: ECSではdeploymentStyleを明示的に指定する必要がある
+            deploymentStyle={
+                'deploymentType': 'BLUE_GREEN',
+                'deploymentOption': 'WITH_TRAFFIC_CONTROL'
+            },
             ecsServices=[
                 {
                     'serviceName': 'vendor0913-api-service',

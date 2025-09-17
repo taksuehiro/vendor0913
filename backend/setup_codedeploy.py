@@ -301,7 +301,7 @@ def main():
     list_codedeploy_resources()
     
     print("\n✅ CodeDeploy setup completed!")
-    print("\n�� Next steps:")
+    print("\n📋 Next steps:")
     print("   1. ECSサービスでBlue/Greenデプロイメントを有効化")
     print("   2. appspec.yamlファイルを作成")
     print("   3. デプロイメントをテスト実行")

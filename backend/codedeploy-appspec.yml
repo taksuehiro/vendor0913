@@ -1,0 +1,33 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TASK_DEFINITION>
+        LoadBalancerInfo:
+          ContainerName: vendor0913-api
+          ContainerPort: 8000
+          TargetGroupArn: <TARGET_GROUP_ARN>
+        PlatformVersion: LATEST
+        NetworkConfiguration:
+          AwsvpcConfiguration:
+            Subnets:
+              - subnet-12345678
+              - subnet-87654321
+            SecurityGroups:
+              - sg-12345678
+            AssignPublicIp: ENABLED
+        ServiceRegistries:
+          - RegistryArn: <SERVICE_REGISTRY_ARN>
+            Port: 8000
+            ContainerName: vendor0913-api
+            ContainerPort: 8000
+Hooks:
+  - BeforeInstall:
+      - LambdaFunctionName: vendor0913-pre-deploy-hook
+  - AfterInstall:
+      - LambdaFunctionName: vendor0913-post-deploy-hook
+  - BeforeAllowTraffic:
+      - LambdaFunctionName: vendor0913-pre-traffic-hook
+  - AfterAllowTraffic:
+      - LambdaFunctionName: vendor0913-post-traffic-hook

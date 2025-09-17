@@ -99,7 +99,7 @@ def create_codedeploy_deployment_group(service_role_arn):
             loadBalancerInfo={
                 'targetGroupInfoList': [
                     {
-                        'targetGroupArn': 'arn:aws:elasticloadbalancing:ap-northeast-1:067717894185:targetgroup/vendor0913-api-tg/7faf336a1d0ee0d5'
+                        'name': 'vendor0913-api-tg'
                     }
                 ]
             },

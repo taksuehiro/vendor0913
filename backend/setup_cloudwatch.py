@@ -16,19 +16,7 @@ def create_sns_topic():
         response = sns_client.create_topic(
             Name='vendor0913-alerts',
             Attributes={
-                'DisplayName': 'Vendor0913 Alerts',
-                'DeliveryPolicy': json.dumps({
-                    "http": {
-                        "defaultHealthyRetryPolicy": {
-                            "minDelayTarget": 20,
-                            "maxDelayTarget": 20,
-                            "numRetries": 3,
-                            "numMaxDelayRetries": 0,
-                            "numMinDelayRetries": 0,
-                            "numNoDelayRetries": 0
-                        }
-                    }
-                })
+                'DisplayName': 'Vendor0913 Alerts'
             }
         )
         
@@ -45,15 +33,39 @@ def create_cloudwatch_dashboard():
     cloudwatch_client = boto3.client('cloudwatch', region_name='ap-northeast-1')
     
     try:
-        with open('cloudwatch-dashboard.json', 'r') as f:
-            dashboard_config = json.load(f)
+        # シンプルなダッシュボードを作成
+        dashboard_body = {
+            "widgets": [
+                {
+                    "type": "metric",
+                    "x": 0,
+                    "y": 0,
+                    "width": 12,
+                    "height": 6,
+                    "properties": {
+                        "metrics": [
+                            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", "vendor0913-alb"],
+                            [".", "TargetResponseTime", ".", "."],
+                            [".", "HTTPCode_Target_2XX_Count", ".", "."],
+                            [".", "HTTPCode_Target_4XX_Count", ".", "."],
+                            [".", "HTTPCode_Target_5XX_Count", ".", "."]
+                        ],
+                        "view": "timeSeries",
+                        "stacked": False,
+                        "region": "ap-northeast-1",
+                        "title": "ALB Metrics",
+                        "period": 300
+                    }
+                }
+            ]
+        }
         
         response = cloudwatch_client.put_dashboard(
-            DashboardName=dashboard_config['DashboardName'],
-            DashboardBody=json.dumps(dashboard_config['DashboardBody'])
+            DashboardName='vendor0913-dashboard',
+            DashboardBody=json.dumps(dashboard_body)
         )
         
-        print(f"✅ CloudWatch Dashboard created: {dashboard_config['DashboardName']}")
+        print(f"✅ CloudWatch Dashboard created: vendor0913-dashboard")
         return True
         
     except Exception as e:
@@ -65,10 +77,30 @@ def create_cloudwatch_alarms():
     cloudwatch_client = boto3.client('cloudwatch', region_name='ap-northeast-1')
     
     try:
-        with open('cloudwatch-alarms.json', 'r') as f:
-            alarms_config = json.load(f)
+        # シンプルなアラームを作成
+        alarms = [
+            {
+                'AlarmName': 'vendor0913-alb-high-error-rate',
+                'ComparisonOperator': 'GreaterThanThreshold',
+                'EvaluationPeriods': 2,
+                'MetricName': 'HTTPCode_Target_5XX_Count',
+                'Namespace': 'AWS/ApplicationELB',
+                'Period': 300,
+                'Statistic': 'Sum',
+                'Threshold': 10.0,
+                'ActionsEnabled': True,
+                'AlarmActions': [],
+                'AlarmDescription': 'High error rate on ALB',
+                'Dimensions': [
+                    {
+                        'Name': 'LoadBalancer',
+                        'Value': 'vendor0913-alb'
+                    }
+                ]
+            }
+        ]
         
-        for alarm in alarms_config['Alarms']:
+        for alarm in alarms:
             response = cloudwatch_client.put_metric_alarm(
                 AlarmName=alarm['AlarmName'],
                 ComparisonOperator=alarm['ComparisonOperator'],

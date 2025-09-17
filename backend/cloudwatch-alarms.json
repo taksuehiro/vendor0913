@@ -1,0 +1,198 @@
+{
+  "alarms": [
+    {
+      "AlarmName": "vendor0913-alb-high-4xx-error-rate",
+      "AlarmDescription": "ALB 4xx error rate is too high",
+      "MetricName": "HTTPCode_Target_4XX_Count",
+      "Namespace": "AWS/ApplicationELB",
+      "Statistic": "Sum",
+      "Dimensions": [
+        {
+          "Name": "LoadBalancer",
+          "Value": "vendor0913-alb-1829210726"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 10,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    },
+    {
+      "AlarmName": "vendor0913-alb-high-5xx-error-rate",
+      "AlarmDescription": "ALB 5xx error rate is too high",
+      "MetricName": "HTTPCode_Target_5XX_Count",
+      "Namespace": "AWS/ApplicationELB",
+      "Statistic": "Sum",
+      "Dimensions": [
+        {
+          "Name": "LoadBalancer",
+          "Value": "vendor0913-alb-1829210726"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 5,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    },
+    {
+      "AlarmName": "vendor0913-ecs-high-cpu-utilization",
+      "AlarmDescription": "ECS service CPU utilization is too high",
+      "MetricName": "CPUUtilization",
+      "Namespace": "AWS/ECS",
+      "Statistic": "Average",
+      "Dimensions": [
+        {
+          "Name": "ServiceName",
+          "Value": "vendor0913-api-service"
+        },
+        {
+          "Name": "ClusterName",
+          "Value": "vendor0913-cluster"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 3,
+      "Threshold": 80,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    },
+    {
+      "AlarmName": "vendor0913-ecs-high-memory-utilization",
+      "AlarmDescription": "ECS service memory utilization is too high",
+      "MetricName": "MemoryUtilization",
+      "Namespace": "AWS/ECS",
+      "Statistic": "Average",
+      "Dimensions": [
+        {
+          "Name": "ServiceName",
+          "Value": "vendor0913-api-service"
+        },
+        {
+          "Name": "ClusterName",
+          "Value": "vendor0913-cluster"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 3,
+      "Threshold": 85,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    },
+    {
+      "AlarmName": "vendor0913-alb-high-response-time",
+      "AlarmDescription": "ALB target response time is too high",
+      "MetricName": "TargetResponseTime",
+      "Namespace": "AWS/ApplicationELB",
+      "Statistic": "Average",
+      "Dimensions": [
+        {
+          "Name": "LoadBalancer",
+          "Value": "vendor0913-alb-1829210726"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 2.0,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    },
+    {
+      "AlarmName": "vendor0913-waf-high-blocked-requests",
+      "AlarmDescription": "WAF blocked requests count is too high",
+      "MetricName": "BlockedRequests",
+      "Namespace": "AWS/WAFV2",
+      "Statistic": "Sum",
+      "Dimensions": [
+        {
+          "Name": "WebACL",
+          "Value": "vendor0913-waf-web-acl"
+        },
+        {
+          "Name": "Region",
+          "Value": "ap-northeast-1"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 100,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    },
+    {
+      "AlarmName": "vendor0913-logs-high-error-rate",
+      "AlarmDescription": "High error rate in application logs",
+      "MetricName": "ErrorCount",
+      "Namespace": "vendor0913/application",
+      "Statistic": "Sum",
+      "Dimensions": [
+        {
+          "Name": "LogGroup",
+          "Value": "/ecs/vendor0913/api"
+        }
+      ],
+      "Period": 300,
+      "EvaluationPeriods": 2,
+      "Threshold": 10,
+      "ComparisonOperator": "GreaterThanThreshold",
+      "AlarmActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "OKActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ],
+      "InsufficientDataActions": [
+        "arn:aws:sns:ap-northeast-1:067717894185:vendor0913-alerts"
+      ]
+    }
+  ]
+}

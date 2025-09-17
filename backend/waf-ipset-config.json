@@ -1,0 +1,23 @@
+{
+  "Name": "vendor0913-whitelist-ips",
+  "Description": "IP whitelist for vendor0913 API access",
+  "Scope": "REGIONAL",
+  "IPAddressVersion": "IPV4",
+  "Addresses": [
+    "0.0.0.0/0"
+  ],
+  "Tags": [
+    {
+      "Key": "Project",
+      "Value": "tak-vendor2-0912"
+    },
+    {
+      "Key": "Owner",
+      "Value": "takuya_suehiro"
+    },
+    {
+      "Key": "Environment",
+      "Value": "production"
+    }
+  ]
+}

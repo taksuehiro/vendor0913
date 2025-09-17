@@ -1,0 +1,70 @@
+name: Deploy Frontend to Amplify
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'frontend/**' ]
+  pull_request:
+    branches: [ main ]
+    paths: [ 'frontend/**' ]
+
+env:
+  AWS_REGION: ap-northeast-1
+  AMPLIFY_APP_ID: d1234567890  # 実際のAmplify App IDに置き換え
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./frontend
+      run: npm ci
+      
+    - name: Run tests
+      working-directory: ./frontend
+      run: npm run test --if-present
+      
+    - name: Build application
+      working-directory: ./frontend
+      run: npm run build
+      env:
+        NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+        
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+        
+    - name: Deploy to Amplify
+      run: |
+        # Amplifyのビルドをトリガー
+        aws amplify start-job \
+          --app-id ${{ env.AMPLIFY_APP_ID }} \
+          --branch-name main \
+          --job-type RELEASE
+          
+    - name: Wait for deployment
+      run: |
+        echo "Waiting for Amplify deployment to complete..."
+        aws amplify wait job-completed \
+          --app-id ${{ env.AMPLIFY_APP_ID }} \
+          --branch-name main
+          
+    - name: Get deployment URL
+      run: |
+        DEPLOYMENT_URL=$(aws amplify get-app --app-id ${{ env.AMPLIFY_APP_ID }} --query 'app.defaultDomain' --output text)
+        echo "Frontend deployed to: https://$DEPLOYMENT_URL"
+        echo "::set-output name=deployment-url::https://$DEPLOYMENT_URL"

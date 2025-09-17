@@ -89,7 +89,7 @@ def create_codedeploy_deployment_group(service_role_arn):
             applicationName='vendor0913-api-app',
             deploymentGroupName='vendor0913-api-group',
             serviceRoleArn=service_role_arn,
-            deploymentConfigName='CodeDeployDefault.ECSAllAtOnce',
+            deploymentConfigName='CodeDeployDefault.ECSBlueGreen',
             ecsServices=[
                 {
                     'serviceName': 'vendor0913-api-service',

@@ -126,3 +126,41 @@ async def search_vendors(search_request: SearchRequest, db: Session = Depends(ge
                 score += 0.4
 
             if score > 0:
+                results.append(SearchResult(
+                    vendor_name=vendor.name,
+                    category=vendor.category,
+                    description=vendor.description or "説明なし",
+                    score=min(score, 1.0),
+                    website_url=vendor.website_url
+                ))
+
+        results.sort(key=lambda x: x.score, reverse=True)
+        return results[:search_request.max_results]
+
+    except Exception as e:
+        logger.error(f"検索エラー: {str(e)}")
+        raise HTTPException(status_code=500, detail="検索処理中にエラーが発生しました")
+
+# テストユーザー作成（初回用）
+def create_test_user():
+    from database import SessionLocal
+    db = SessionLocal()
+    try:
+        existing_user = db.query(User).filter(User.email == "test@example.com").first()
+        if not existing_user:
+            hashed_password = get_password_hash("password")
+            test_user = User(
+                email="test@example.com",
+                hashed_password=hashed_password,
+                name="テストユーザー"
+            )
+            db.add(test_user)
+            db.commit()
+            print("テストユーザーを作成しました: test@example.com")
+        else:
+            print("テストユーザーは既に存在します")
+    except Exception as e:
+        print(f"テストユーザー作成エラー: {e}")
+    finally:
+        db.close()
+    

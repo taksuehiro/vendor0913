@@ -1,0 +1,67 @@
+[
+    {
+        "ID": "subnet-026c10f22bc41199f",
+        "AZ": "ap-northeast-1a",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0ed1e29e869be8e4d",
+        "AZ": "ap-northeast-1a",
+        "Public": false
+    },
+    {
+        "ID": "subnet-06db3bcbbcac3b8c4",
+        "AZ": "ap-northeast-1a",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0f8cb297b18f767fe",
+        "AZ": "ap-northeast-1c",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0bff005c6d1ca3af2",
+        "AZ": "ap-northeast-1d",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0c22eebd12bee8c07",
+        "AZ": "ap-northeast-1a",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0cea1640a7ec5012c",
+        "AZ": "ap-northeast-1c",
+        "Public": false
+    },
+    {
+        "ID": "subnet-071107926e276ae67",
+        "AZ": "ap-northeast-1a",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0a78db960fea6083d",
+        "AZ": "ap-northeast-1d",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0cc1cc4b5e60f3fb1",
+        "AZ": "ap-northeast-1c",
+        "Public": false
+    },
+    {
+        "ID": "subnet-0627731b46727cf99",
+        "AZ": "ap-northeast-1d",
+        "Public": false
+    },
+    {
+        "ID": "subnet-07a23cb069c00f879",
+        "AZ": "ap-northeast-1c",
+        "Public": false
+    },
+    {
+        "ID": "subnet-00689c066554ec400",
+        "AZ": "ap-northeast-1c",
+        "Public": false
+    }
+]

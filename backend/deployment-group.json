@@ -1,0 +1,50 @@
+{
+  "applicationName": "vendor0913-ecs-app",
+  "deploymentGroupName": "vendor0913-ecs-dg",
+  "deploymentStyle": {
+    "deploymentType": "BLUE_GREEN",
+    "deploymentOption": "WITH_TRAFFIC_CONTROL"
+  },
+  "blueGreenDeploymentConfiguration": {
+    "deploymentReadyOption": {
+      "actionOnTimeout": "CONTINUE_DEPLOYMENT",
+      "waitTimeInMinutes": 0
+    },
+    "terminateBlueInstancesOnDeploymentSuccess": {
+      "action": "TERMINATE",
+      "terminationWaitTimeInMinutes": 5
+    }
+  },
+  "loadBalancerInfo": {
+    "targetGroupPairInfoList": [
+      {
+        "targetGroups": [
+          {
+            "name": "vendor0913-api-tg"
+          },
+          {
+            "name": "vendor0913-api-tg2"
+          }
+        ],
+        "prodTrafficRoute": {
+          "listenerArns": [
+            "arn:aws:elasticloadbalancing:ap-northeast-1:067717894185:listener/app/vendor0913-alb/14ca1653514aa394/7eaa0e111ec83425"
+          ]
+        }
+      }
+    ]
+  },
+  "serviceRoleArn": "arn:aws:iam::067717894185:role/CodeDeployServiceRole",
+  "ecsServices": [
+    {
+      "serviceName": "vendor0913-api-service",
+      "clusterName": "vendor0913-cluster"
+    }
+  ],
+  "autoRollbackConfiguration": {
+    "enabled": true,
+    "events": [
+      "DEPLOYMENT_FAILURE"
+    ]
+  }
+}

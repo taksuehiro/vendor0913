@@ -1,0 +1,65 @@
+{
+  "containerDefinitions": [
+    {
+      "name": "vendor0913-api",
+      "image": "067717894185.dkr.ecr.ap-northeast-1.amazonaws.com/vendor0913-api:latest",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "name": "vendor0913-api-8000-tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "ulimits": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/vendor0913-api-task",
+          "awslogs-create-group": "true",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs"
+        },
+        "secretOptions": []
+      },
+      "systemControls": [],
+      "secrets": [
+        {
+          "name": "AURORA_CLUSTER_ARN",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913-aurora-secret-UDEchI:AURORA_CLUSTER_ARN::"
+        },
+        {
+          "name": "AURORA_SECRET_ARN",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913-aurora-secret-UDEchI:AURORA_SECRET_ARN::"
+        },
+        {
+          "name": "AURORA_DATABASE",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913-aurora-secret-UDEchI:AURORA_DATABASE::"
+        },
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913-openai-secret-eed5zz:OPENAI_API_KEY::"
+        }
+      ]
+    }
+  ],
+  "family": "vendor0913-api-task",
+  "taskRoleArn": "arn:aws:iam::067717894185:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::067717894185:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "volumes": [],
+  "placementConstraints": [],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "1024",
+  "memory": "3072",
+  "enableFaultInjection": false
+}

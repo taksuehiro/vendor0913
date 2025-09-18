@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "Resources": [
+    {
+      "TargetService": {
+        "Type": "AWS::ECS::Service",
+        "Properties": {
+          "TaskDefinition": "arn:aws:ecs:ap-northeast-1:067717894185:task-definition/vendor0913-api-task:10",
+          "LoadBalancerInfo": {
+            "TargetGroupPairInfoList": [
+              {
+                "TargetGroups": [
+                  {"Name": "vendor0913-api-tg-8080"},
+                  {"Name": "vendor0913-api-tg-test-8080"}
+                ],
+                "ProdTrafficRoute": {"ListenerArns": ["arn:aws:elasticloadbalancing:ap-northeast-1:067717894185:listener/app/vendor0913-alb/14ca1653514aa394/7eaa0e111ec83425"]},
+                "TestTrafficRoute": {"ListenerArns": ["arn:aws:elasticloadbalancing:ap-northeast-1:067717894185:listener/app/vendor0913-alb/14ca1653514aa394/7eaa0e111ec83425"]}
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

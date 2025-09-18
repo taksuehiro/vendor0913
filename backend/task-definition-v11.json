@@ -1,0 +1,50 @@
+{
+  "family": "vendor0913-api-task",
+  "networkMode": "awsvpc",
+  "executionRoleArn": "arn:aws:iam::067717894185:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::067717894185:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "vendor0913-api",
+      "image": "067717894185.dkr.ecr.ap-northeast-1.amazonaws.com/vendor0913-api:latest",
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "OPENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913/openai/config:OPENAI_API_KEY::"
+        },
+        {
+          "name": "DATABASE_URL",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913-aurora-secret:AURORA_DATABASE::"
+        },
+        {
+          "name": "NEXTAUTH_SECRET",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:067717894185:secret:vendor0913/openai/config:NEXTAUTH_SECRET::"
+        }
+      ],
+      "environment": [
+        {
+          "name": "PORT",
+          "value": "8080"
+        }
+      ],
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/vendor0913-api",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024"
+}

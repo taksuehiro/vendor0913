@@ -1,7 +1,7 @@
 {
   "Name": "vendor0913-waf-web-acl",
   "Description": "WAF Web ACL for vendor0913 API protection",
-  "Scope": "CLOUDFRONT",
+  "Scope": "REGIONAL",
   "DefaultAction": {
     "Allow": {}
   },

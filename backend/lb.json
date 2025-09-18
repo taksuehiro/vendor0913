@@ -1,0 +1,13 @@
+{
+  "targetGroupPairInfoList": [
+    {
+      "targetGroups": [
+        { "name": "vendor0913-api-tg" },
+        { "name": "vendor0913-api-tg2" }
+      ],
+      "prodTrafficRoute": {
+        "listenerArns": ["arn:aws:elasticloadbalancing:ap-northeast-1:067717894185:listener/app/vendor0913-alb/14ca1653514aa394/7eaa0e111ec83425"]
+      }
+    }
+  ]
+}
